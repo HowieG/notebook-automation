@@ -1,0 +1,64 @@
+name: Run Notebook and Check Logs
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run-notebook-and-check-logs:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install papermill agentops python-dotenv
+
+    - name: Create .env file
+      run: |
+        echo "Creating .env file with secrets containing 'KEY'"
+        for secret in $(jq -r 'keys[]' <<< '${{ toJson(secrets) }}' | grep KEY); do
+          echo "${secret}=${{ secrets[format('{0}', secret)] }}" >> .env
+        done
+        echo "Created .env file with the following keys (values hidden):"
+        cut -d= -f1 .env
+
+    - name: Run notebook
+      run: |
+        papermill openai-gpt.ipynb output-${{ matrix.python-version }}.ipynb
+
+    - name: Check for errors and warnings
+      run: |
+        if grep -E "ERROR|WARNING" agentops.log; then
+          echo "Errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
+          exit 1
+        else
+          echo "No errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
+        fi
+
+    - name: Upload notebook output as artifact
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: notebook-output-${{ matrix.python-version }}
+        path: output-${{ matrix.python-version }}.ipynb
+
+    - name: Upload log as artifact
+      uses: actions/upload-artifact@v2
+      if: always()
+      with:
+        name: agentops-log-${{ matrix.python-version }}
+        path: agentops.log
