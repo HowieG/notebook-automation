@@ -9,7 +9,6 @@ on:
 jobs:
   run-notebook-and-check-logs:
     runs-on: ubuntu-latest
-    environment: AGENTOPS_PROD
     strategy:
       matrix:
         python-version: ['3.8']
@@ -26,19 +25,16 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -U ipython ipykernel papermill
+        pip install -U jupyter
 
     - name: Create .env file
       run: |
-        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}"
-        echo "AGENTOPS_API_KEY=${{ secrets.AGENTOPS_API_KEY }}"
         echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
         echo "AGENTOPS_API_KEY=${{ secrets.AGENTOPS_API_KEY }}" >> .env
-        # Add any other secrets you need here
 
     - name: Run notebook
       run: |
-        papermill openai-gpt.ipynb output-${{ matrix.python-version }}.ipynb
+        jupyter execute openai-gpt.ipynb
 
     - name: Check for errors and warnings
       run: |
@@ -52,13 +48,6 @@ jobs:
         else
           echo "agentops.log file not found. Assuming successful execution without logging."
         fi
-
-    - name: Upload notebook output as artifact
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: notebook-output-${{ matrix.python-version }}
-        path: output-${{ matrix.python-version }}.ipynb
 
     - name: Upload log as artifact (if exists)
       uses: actions/upload-artifact@v4
