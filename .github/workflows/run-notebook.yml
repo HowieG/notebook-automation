@@ -29,12 +29,9 @@ jobs:
 
     - name: Create .env file
       run: |
-        echo "Creating .env file with secrets containing 'KEY'"
-        for secret in $(jq -r 'keys[]' <<< '${{ toJson(secrets) }}' | grep KEY); do
-          echo "${secret}=${{ secrets[format('{0}', secret)] }}" >> .env
-        done
-        echo "Created .env file with the following keys (values hidden):"
-        cut -d= -f1 .env
+        echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+        echo "AGENTOPS_API_KEY=${{ secrets.AGENTOPS_API_KEY }}" >> .env
+        # Add any other secrets you need here
 
     - name: Run notebook
       run: |
