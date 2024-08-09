@@ -25,7 +25,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install papermill agentops python-dotenv
+        pip install -U ipython ipykernel papermill
 
     - name: Create .env file
       run: |
@@ -39,11 +39,15 @@ jobs:
 
     - name: Check for errors and warnings
       run: |
-        if grep -E "ERROR|WARNING" agentops.log; then
-          echo "Errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
-          exit 1
+        if [ -f agentops.log ]; then
+          if grep -E "ERROR|WARNING" agentops.log; then
+            echo "Errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
+            exit 1
+          else
+            echo "No errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
+          fi
         else
-          echo "No errors or warnings found in agentops.log for Python ${{ matrix.python-version }}"
+          echo "agentops.log file not found. Assuming successful execution without logging."
         fi
 
     - name: Upload notebook output as artifact
@@ -53,9 +57,10 @@ jobs:
         name: notebook-output-${{ matrix.python-version }}
         path: output-${{ matrix.python-version }}.ipynb
 
-    - name: Upload log as artifact
+    - name: Upload log as artifact (if exists)
       uses: actions/upload-artifact@v2
       if: always()
       with:
         name: agentops-log-${{ matrix.python-version }}
         path: agentops.log
+        if-no-files-found: ignore
