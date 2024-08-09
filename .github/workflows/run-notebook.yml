@@ -9,6 +9,7 @@ on:
 jobs:
   run-notebook-and-check-logs:
     runs-on: ubuntu-latest
+    environment: AGENTOPS_PROD
     strategy:
       matrix:
         python-version: ['3.8']
