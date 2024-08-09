@@ -16,10 +16,10 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -54,14 +54,14 @@ jobs:
         fi
 
     - name: Upload notebook output as artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: notebook-output-${{ matrix.python-version }}
         path: output-${{ matrix.python-version }}.ipynb
 
     - name: Upload log as artifact (if exists)
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: agentops-log-${{ matrix.python-version }}
